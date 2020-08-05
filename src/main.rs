@@ -1,85 +1,60 @@
-use specs::{
-    join::Join, Builder, Component, DispatcherBuilder, NullStorage, ReadStorage, RunNow, System,
-    VecStorage, World, WorldExt, WriteStorage,
+mod entities;
+mod game;
+mod systems;
+
+use amethyst::{
+    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
+    prelude::*,
+    renderer::{
+        plugins::{RenderFlat2D, RenderToWindow},
+        types::DefaultBackend,
+        RenderingBundle,
+    },
+    utils::application_root_dir,
 };
 
-type Coordinate = fixed::types::I32F32;
+use crate::game::Game;
+use std::time::Duration;
 
-#[derive(Debug)]
-struct Position {
-    x: Coordinate,
-    y: Coordinate,
-}
+fn main() -> amethyst::Result<()> {
+    amethyst::start_logger(Default::default());
 
-impl Component for Position {
-    type Storage = VecStorage<Self>;
-}
+    let app_root = application_root_dir()?;
+    let display_config_path = app_root.join("config").join("display.ron");
 
-#[derive(Debug)]
-struct Velocity {
-    x: Coordinate,
-    y: Coordinate,
-}
+    let game_data = GameDataBuilder::default()
+        .with_bundle(
+            RenderingBundle::<DefaultBackend>::new()
+                // The RenderToWindow plugin provides all the scaffolding for opening a window and drawing on it
+                .with_plugin(
+                    RenderToWindow::from_config_path(display_config_path)?
+                        .with_clear([0.0, 0.0, 0.0, 1.0]),
+                )
+                // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
+                .with_plugin(RenderFlat2D::default()),
+        )?
+        .with(systems::Movement, "movement", &[])
+        .with(systems::Rotation, "rotation", &[])
+        .with(
+            systems::DerivePositionalTransform,
+            "derive_positional_transform",
+            &["movement"],
+        )
+        .with(
+            systems::DeriveRotationalTransform,
+            "derive_rotational_transform",
+            &["rotation"],
+        )
+        .with_bundle(TransformBundle::new())?;
 
-impl Component for Velocity {
-    type Storage = VecStorage<Self>;
-}
+    let assets_dir = app_root.join("assets");
+    let mut game = Application::build(assets_dir, Game)?
+        .with_frame_limit(
+            FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(10)),
+            50,
+        )
+        .build(game_data)?;
+    game.run();
 
-#[derive(Default)]
-struct Station;
-
-impl Component for Station {
-    type Storage = NullStorage<Self>;
-}
-
-#[derive(Default)]
-struct Trader;
-
-impl Component for Trader {
-    type Storage = NullStorage<Self>;
-}
-
-struct Movement;
-
-impl<'a> System<'a> for Movement {
-    type SystemData = (ReadStorage<'a, Velocity>, WriteStorage<'a, Position>);
-
-    fn run(&mut self, (vel, mut pos): Self::SystemData) {
-        for (vel, pos) in (&vel, &mut pos).join() {
-            pos.x += vel.x;
-            pos.y += vel.y;
-        }
-    }
-}
-
-fn main() {
-    let mut world = World::new();
-    world.register::<Position>();
-    world.register::<Velocity>();
-    world.register::<Trader>();
-    world.register::<Station>();
-
-    world
-        .create_entity()
-        .with(Station)
-        .with(Position {
-            x: Coordinate::from_num(4),
-            y: Coordinate::from_num(7),
-        })
-        .build();
-
-    world
-        .create_entity()
-        .with(Trader)
-        .with(Position {
-            x: Coordinate::from_num(2),
-            y: Coordinate::from_num(4),
-        })
-        .build();
-
-    let mut dispatcher = DispatcherBuilder::new()
-        .with(Movement, "movement", &[])
-        .build();
-
-    dispatcher.dispatch(&mut world);
+    Ok(())
 }
