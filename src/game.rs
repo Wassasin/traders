@@ -2,7 +2,7 @@ use amethyst::{
     assets::{AssetStorage, Handle, Loader},
     core::transform::Transform,
     prelude::*,
-    renderer::{Camera, ImageFormat, SpriteRender, SpriteSheet, SpriteSheetFormat, Texture},
+    renderer::{Camera, ImageFormat, SpriteSheet, SpriteSheetFormat, Texture},
 };
 
 use crate::entities::*;
@@ -61,37 +61,19 @@ impl SimpleState for Game {
         world.register::<Station>();
         world.register::<ShipBehaviour>();
 
-        create_station(
+        create_station(world, Position::new(Point2::new(800., 700.)));
+        let s2 = create_station(world, Position::new(Point2::new(300., 100.)));
+
+        create_trader(
             world,
-            Position::new(Vec2 {
-                x: Coordinate::from_num(800.),
-                y: Coordinate::from_num(700.),
-            }),
-        );
-        let s2 = create_station(
-            world,
-            Position::new(Vec2 {
-                x: Coordinate::from_num(300.),
-                y: Coordinate::from_num(100.),
-            }),
+            Position::new(Point2::new(900., 900.)),
+            ShipBehaviour::Idle,
         );
 
         create_trader(
             world,
-            Position::new(Vec2 {
-                x: Coordinate::from_num(900.),
-                y: Coordinate::from_num(900.),
-            }),
-            ShipBehaviour::Idle
-        );
-
-        create_trader(
-            world,
-            Position::new(Vec2 {
-                x: Coordinate::from_num(50.),
-                y: Coordinate::from_num(50.),
-            }),
-            ShipBehaviour::FlyTo(s2)
+            Position::new(Point2::new(50., 50.)),
+            ShipBehaviour::FlyTo(s2),
         );
     }
 }

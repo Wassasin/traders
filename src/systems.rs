@@ -15,7 +15,7 @@ impl<'a> System<'a> for Movement {
 
     fn run(&mut self, (vel, mut pos): Self::SystemData) {
         for (vel, pos) in (&vel, &mut pos).join() {
-            *pos.deref_mut() += *vel.deref();
+            vel.deref().transform_point(pos.deref_mut());
         }
     }
 }
@@ -73,7 +73,7 @@ impl<'a> System<'a> for DeriveRotationalTransform {
 
     fn run(&mut self, (angle, mut transform): Self::SystemData) {
         for (angle, transform) in (&angle, &mut transform).join() {
-            transform.set_rotation_2d((*angle).into());
+            transform.set_rotation_2d(*angle.deref());
         }
     }
 }

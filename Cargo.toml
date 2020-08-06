@@ -5,6 +5,6 @@ authors = ["Wouter Geraedts <git@woutergeraedts.nl>"]
 edition = "2018"
 
 [dependencies]
-fixed = { version = "1.1.0", features = ["az"] }
+nalgebra = "0.21.1"
 derive_more = "0.99.9"
 amethyst = { version = "0.15", features = ["vulkan", "no-slow-safety-checks"], default-features = false }

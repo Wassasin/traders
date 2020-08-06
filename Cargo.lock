@@ -188,7 +188,7 @@ dependencies = [
  "fnv",
  "getset",
  "log",
- "nalgebra",
+ "nalgebra 0.19.0",
  "num-traits 0.2.12",
  "rayon",
  "serde",
@@ -427,12 +427,6 @@ name = "autocfg"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8aac770f1885fd7e387acedd76065302551364496e46b3dd00860b2f8359b9d"
-
-[[package]]
-name = "az"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9bcd47d94aa4eb8c076b50fc61a75020789394ffb9bd74a180b3379130f6569"
 
 [[package]]
 name = "backtrace"
@@ -1054,16 +1048,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fixed"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4b58d7066268f26a74aba4b44d31d70ca57248536827318b80e92ab77e0e5b9"
-dependencies = [
- "az",
- "typenum",
-]
-
-[[package]]
 name = "float-ord"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1671,6 +1655,24 @@ dependencies = [
  "rand_distr",
  "serde",
  "serde_derive",
+ "typenum",
+]
+
+[[package]]
+name = "nalgebra"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6b6147c3d50b4f3cdabfe2ecc94a0191fd3d6ad58aefd9664cf396285883486"
+dependencies = [
+ "approx 0.3.2",
+ "generic-array",
+ "matrixmultiply",
+ "num-complex",
+ "num-rational",
+ "num-traits 0.2.12",
+ "rand 0.7.3",
+ "rand_distr",
+ "simba",
  "typenum",
 ]
 
@@ -2923,6 +2925,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5752e017e03af9d735b4b069f53b7a7fd90fefafa04d8bd0c25581b0bff437f"
 
 [[package]]
+name = "simba"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb931b1367faadea6b1ab1c306a860ec17aaa5fa39f367d0c744e69d971a1fb2"
+dependencies = [
+ "approx 0.3.2",
+ "num-complex",
+ "num-traits 0.2.12",
+ "paste",
+]
+
+[[package]]
 name = "siphasher"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3187,7 +3201,7 @@ version = "0.1.0"
 dependencies = [
  "amethyst",
  "derive_more",
- "fixed",
+ "nalgebra 0.21.1",
 ]
 
 [[package]]
