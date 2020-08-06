@@ -48,40 +48,50 @@ pub struct Game;
 
 impl SimpleState for Game {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        let mut world = data.world;
+        let world = data.world;
 
         let sprite_sheet_handle = load_sprite_sheet(world);
         world.insert(sprite_sheet_handle);
 
         initialise_camera(world);
-        // initialize_trader(world, sprite_sheet_handle);
 
         world.register::<Position>();
         world.register::<Velocity>();
         world.register::<Trader>();
         world.register::<Station>();
+        world.register::<ShipBehaviour>();
 
         create_station(
             world,
-            Position {
+            Position::new(Vec2 {
                 x: Coordinate::from_num(800.),
                 y: Coordinate::from_num(700.),
-            },
+            }),
         );
-        create_station(
+        let s2 = create_station(
             world,
-            Position {
+            Position::new(Vec2 {
                 x: Coordinate::from_num(300.),
                 y: Coordinate::from_num(100.),
-            },
+            }),
         );
 
         create_trader(
             world,
-            Position {
+            Position::new(Vec2 {
+                x: Coordinate::from_num(900.),
+                y: Coordinate::from_num(900.),
+            }),
+            ShipBehaviour::Idle
+        );
+
+        create_trader(
+            world,
+            Position::new(Vec2 {
                 x: Coordinate::from_num(50.),
                 y: Coordinate::from_num(50.),
-            },
+            }),
+            ShipBehaviour::FlyTo(s2)
         );
     }
 }

@@ -33,8 +33,9 @@ fn main() -> amethyst::Result<()> {
                 // RenderFlat2D plugin is used to render entities with a `SpriteRender` component.
                 .with_plugin(RenderFlat2D::default()),
         )?
-        .with(systems::Movement, "movement", &[])
-        .with(systems::Rotation, "rotation", &[])
+        .with(systems::Navigation, "navigation", &[])
+        .with(systems::Movement, "movement", &["navigation"])
+        .with(systems::Rotation, "rotation", &["navigation"])
         .with(
             systems::DerivePositionalTransform,
             "derive_positional_transform",
