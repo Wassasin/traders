@@ -1,5 +1,6 @@
 pub mod entities;
 pub mod game;
+pub mod resources;
 pub mod systems;
 
 use amethyst::{
@@ -47,6 +48,7 @@ fn main() -> amethyst::Result<()> {
             "derive_rotational_transform",
             &["rotation"],
         )
+        .with(systems::CameraControl, "camera_control", &["movement"])
         .with_bundle(TransformBundle::new())?;
 
     let assets_dir = app_root.join("assets");

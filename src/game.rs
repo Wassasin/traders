@@ -71,10 +71,13 @@ impl SimpleState for Game {
             ShipBehaviour::Idle,
         );
 
-        create_trader(
+        let t1 = create_trader(
             world,
             Position::new(Point2::new(50., 50.)),
             ShipBehaviour::Idle,
         );
+
+        let camera_behaviour = crate::resources::CameraBehaviour::Follow(t1);
+        world.insert(camera_behaviour);
     }
 }

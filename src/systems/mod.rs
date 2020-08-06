@@ -1,14 +1,17 @@
 pub mod behaviour;
 
-use crate::entities::*;
 use amethyst::{
     core::transform::Transform,
     ecs::{
         join::Join,
-        prelude::{ReadStorage, System, WriteStorage},
+        prelude::{ReadExpect, ReadStorage, System, WriteStorage},
     },
+    renderer::Camera,
 };
 use std::ops::{Deref, DerefMut};
+
+use crate::entities::*;
+use crate::resources::*;
 
 pub struct Movement;
 
@@ -72,6 +75,30 @@ impl<'a> System<'a> for DeriveRotationalTransform {
     fn run(&mut self, (angle, mut transform): Self::SystemData) {
         for (angle, transform) in (&angle, &mut transform).join() {
             transform.set_rotation_2d(*angle.deref());
+        }
+    }
+}
+
+pub struct CameraControl;
+
+impl<'a> System<'a> for CameraControl {
+    type SystemData = (
+        ReadExpect<'a, CameraBehaviour>,
+        ReadStorage<'a, Camera>,
+        ReadStorage<'a, Position>,
+        WriteStorage<'a, Transform>,
+    );
+
+    fn run(&mut self, (behaviour, camera, pos, mut transform): Self::SystemData) {
+        for (_camera, transform) in (&camera, &mut transform).join() {
+            match behaviour.deref() {
+                CameraBehaviour::Static(t) => *transform = t.clone(),
+                CameraBehaviour::Follow(target) => {
+                    if let Some(pos) = pos.get(*target) {
+                        transform.set_translation_xyz(pos.x, pos.y, 1.0);
+                    }
+                }
+            }
         }
     }
 }
