@@ -1,7 +1,7 @@
 use amethyst::{
     assets::Handle,
     core::transform::Transform,
-    ecs::{Builder, Component, Entity, NullStorage, DenseVecStorage, VecStorage, World, WorldExt},
+    ecs::{Builder, Component, DenseVecStorage, Entity, NullStorage, VecStorage, World, WorldExt},
     renderer::{SpriteRender, SpriteSheet},
 };
 use derive_more::{Add, Deref, DerefMut, Mul, Sub};

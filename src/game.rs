@@ -62,7 +62,8 @@ impl SimpleState for Game {
         world.register::<ShipBehaviour>();
 
         create_station(world, Position::new(Point2::new(800., 700.)));
-        let s2 = create_station(world, Position::new(Point2::new(300., 100.)));
+        create_station(world, Position::new(Point2::new(300., 100.)));
+        create_station(world, Position::new(Point2::new(200., 600.)));
 
         create_trader(
             world,
@@ -73,7 +74,7 @@ impl SimpleState for Game {
         create_trader(
             world,
             Position::new(Point2::new(50., 50.)),
-            ShipBehaviour::FlyTo(s2),
+            ShipBehaviour::Idle,
         );
     }
 }

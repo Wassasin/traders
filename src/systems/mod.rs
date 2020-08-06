@@ -1,3 +1,5 @@
+pub mod behaviour;
+
 use crate::entities::*;
 use amethyst::{
     core::transform::Transform,
@@ -32,37 +34,6 @@ impl<'a> System<'a> for Rotation {
     }
 }
 
-pub struct Navigation;
-
-impl<'a> System<'a> for Navigation {
-    type SystemData = (
-        ReadStorage<'a, Position>,
-        ReadStorage<'a, ShipBehaviour>,
-        WriteStorage<'a, Velocity>,
-    );
-
-    fn run(&mut self, (pos, behaviour, mut vel): Self::SystemData) {
-        use crate::entities::ShipBehaviour::FlyTo;
-        for (&our_pos, behaviour, vel) in (&pos, &behaviour, &mut vel).join() {
-            if let FlyTo(target) = behaviour {
-                if let Some(&target_pos) = pos.get(*target) {
-                    let vec = *target_pos.deref() - *our_pos.deref();
-                    let len = nalgebra_glm::length(&vec);
-
-                    let trans = if len > 0.00001 {
-                        let new_len = f32::min(0.5, len);
-                        Translation2::from(vec.scale(new_len / len))
-                    } else {
-                        Translation2::new(0., 0.)
-                    };
-
-                    *vel.deref_mut() = trans;
-                }
-            }
-        }
-    }
-}
-
 pub struct DerivePositionalTransform;
 
 impl<'a> System<'a> for DerivePositionalTransform {
@@ -70,11 +41,13 @@ impl<'a> System<'a> for DerivePositionalTransform {
         ReadStorage<'a, Position>,
         ReadStorage<'a, Trader>,
         ReadStorage<'a, Station>,
-        WriteStorage<'a, Transform>
+        WriteStorage<'a, Transform>,
     );
 
     fn run(&mut self, (pos, trader, station, mut transform): Self::SystemData) {
-        for (pos, trader, station, transform) in (&pos, (&trader).maybe(), (&station).maybe(), &mut transform).join() {
+        for (pos, trader, station, transform) in
+            (&pos, (&trader).maybe(), (&station).maybe(), &mut transform).join()
+        {
             transform.set_scale([1.0, 1.0, 1.0].into());
 
             // Vary z-level based on type
@@ -82,7 +55,7 @@ impl<'a> System<'a> for DerivePositionalTransform {
                 0.2
             } else if station.is_some() {
                 0.1
-            }else {
+            } else {
                 0.0
             };
 
