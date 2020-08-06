@@ -6,5 +6,7 @@ edition = "2018"
 
 [dependencies]
 nalgebra = "0.21.1"
+nalgebra-glm = "0.7.0"
+
 derive_more = "0.99.9"
 amethyst = { version = "0.15", features = ["vulkan", "no-slow-safety-checks"], default-features = false }

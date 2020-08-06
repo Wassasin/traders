@@ -1,7 +1,7 @@
 use amethyst::{
     assets::Handle,
     core::transform::Transform,
-    ecs::{Builder, Component, Entity, NullStorage, VecStorage, World, WorldExt},
+    ecs::{Builder, Component, Entity, NullStorage, DenseVecStorage, VecStorage, World, WorldExt},
     renderer::{SpriteRender, SpriteSheet},
 };
 use derive_more::{Add, Deref, DerefMut, Mul, Sub};
@@ -14,7 +14,7 @@ pub type Translation2 = nalgebra::geometry::Translation2<f32>;
 pub struct Position(Point2);
 
 impl Component for Position {
-    type Storage = VecStorage<Self>;
+    type Storage = DenseVecStorage<Self>;
 }
 
 impl Position {
@@ -33,6 +33,12 @@ impl Component for Velocity {
 impl Default for Velocity {
     fn default() -> Self {
         Self(Translation2::new(0., 0.))
+    }
+}
+
+impl Velocity {
+    pub fn new(vec: Translation2) -> Self {
+        Self(vec)
     }
 }
 

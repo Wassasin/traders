@@ -1,6 +1,6 @@
-mod entities;
-mod game;
-mod systems;
+pub mod entities;
+pub mod game;
+pub mod systems;
 
 use amethyst::{
     core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},

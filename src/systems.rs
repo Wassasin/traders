@@ -15,7 +15,7 @@ impl<'a> System<'a> for Movement {
 
     fn run(&mut self, (vel, mut pos): Self::SystemData) {
         for (vel, pos) in (&vel, &mut pos).join() {
-            vel.deref().transform_point(pos.deref_mut());
+            *pos.deref_mut() = vel.deref().transform_point(pos.deref());
         }
     }
 }
@@ -46,7 +46,17 @@ impl<'a> System<'a> for Navigation {
         for (&our_pos, behaviour, vel) in (&pos, &behaviour, &mut vel).join() {
             if let FlyTo(target) = behaviour {
                 if let Some(&target_pos) = pos.get(*target) {
-                    let vec = *our_pos.deref() - *target_pos.deref();
+                    let vec = *target_pos.deref() - *our_pos.deref();
+                    let len = nalgebra_glm::length(&vec);
+
+                    let trans = if len > 0.00001 {
+                        let new_len = f32::min(0.5, len);
+                        Translation2::from(vec.scale(new_len / len))
+                    } else {
+                        Translation2::new(0., 0.)
+                    };
+
+                    *vel.deref_mut() = trans;
                 }
             }
         }
@@ -56,12 +66,27 @@ impl<'a> System<'a> for Navigation {
 pub struct DerivePositionalTransform;
 
 impl<'a> System<'a> for DerivePositionalTransform {
-    type SystemData = (ReadStorage<'a, Position>, WriteStorage<'a, Transform>);
+    type SystemData = (
+        ReadStorage<'a, Position>,
+        ReadStorage<'a, Trader>,
+        ReadStorage<'a, Station>,
+        WriteStorage<'a, Transform>
+    );
 
-    fn run(&mut self, (pos, mut transform): Self::SystemData) {
-        for (pos, transform) in (&pos, &mut transform).join() {
+    fn run(&mut self, (pos, trader, station, mut transform): Self::SystemData) {
+        for (pos, trader, station, transform) in (&pos, (&trader).maybe(), (&station).maybe(), &mut transform).join() {
             transform.set_scale([1.0, 1.0, 1.0].into());
-            transform.set_translation_xyz(pos.x.into(), pos.y.into(), 0.0);
+
+            // Vary z-level based on type
+            let z = if trader.is_some() {
+                0.2
+            } else if station.is_some() {
+                0.1
+            }else {
+                0.0
+            };
+
+            transform.set_translation_xyz(pos.x.into(), pos.y.into(), z);
         }
     }
 }
