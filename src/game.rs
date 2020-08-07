@@ -83,6 +83,7 @@ impl SimpleState for Game {
 
         let camera_state = CameraState {
             zoom: 1.0,
+            pan: Translation2::new(0., 0.),
             behaviour: CameraBehaviour::Follow(t1),
         };
 
@@ -124,9 +125,36 @@ impl SimpleState for Game {
                         camera_state.zoom = f32::min(f32::max(0.1, camera_state.zoom + dir), 2.0);
                     }
                     MouseButtonPressed(MouseButton::Left) => {
-                        info!("Input Event detected: {:?}.", input);
+                        info!("Press detected: {:?}.", input);
                     }
-                    MouseMoved { .. } | CursorMoved { .. } => (),
+                    MouseMoved { .. }
+                    | CursorMoved { .. }
+                    | KeyTyped(_)
+                    | ButtonPressed(_)
+                    | ButtonReleased(_)
+                    | MouseButtonReleased(_) => (),
+                    KeyPressed { key_code, .. } => {
+                        let mut camera_state = world.fetch_mut::<CameraState>();
+
+                        match key_code {
+                            VirtualKeyCode::W => camera_state.pan.y = 1.,
+                            VirtualKeyCode::A => camera_state.pan.x = -1.,
+                            VirtualKeyCode::S => camera_state.pan.y = -1.,
+                            VirtualKeyCode::D => camera_state.pan.x = 1.,
+                            _ => (),
+                        }
+                    }
+                    KeyReleased { key_code, .. } => {
+                        let mut camera_state = world.fetch_mut::<CameraState>();
+
+                        match key_code {
+                            VirtualKeyCode::W => camera_state.pan.y = 0.,
+                            VirtualKeyCode::A => camera_state.pan.x = 0.,
+                            VirtualKeyCode::S => camera_state.pan.y = 0.,
+                            VirtualKeyCode::D => camera_state.pan.x = 0.,
+                            _ => (),
+                        }
+                    }
                     _ => {
                         info!("Input Event detected: {:?}.", input);
                     }

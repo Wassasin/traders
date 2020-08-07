@@ -4,7 +4,7 @@ use amethyst::{
     core::transform::Transform,
     ecs::{
         join::Join,
-        prelude::{ReadExpect, ReadStorage, System, WriteStorage},
+        prelude::{ReadExpect, ReadStorage, System, WriteExpect, WriteStorage},
     },
     renderer::Camera,
     window::Window,
@@ -84,19 +84,35 @@ pub struct CameraControl;
 
 impl<'a> System<'a> for CameraControl {
     type SystemData = (
-        ReadExpect<'a, CameraState>,
+        WriteExpect<'a, CameraState>,
         ReadExpect<'a, Window>,
         ReadStorage<'a, Position>,
         WriteStorage<'a, Camera>,
         WriteStorage<'a, Transform>,
     );
 
-    fn run(&mut self, (camera_state, window, pos, mut camera, mut transform): Self::SystemData) {
+    fn run(
+        &mut self,
+        (mut camera_state, window, pos, mut camera, mut transform): Self::SystemData,
+    ) {
         let size = window.deref().get_inner_size().unwrap();
         let zoom = camera_state.zoom;
 
         for (camera, transform) in (&mut camera, &mut transform).join() {
+            // Update the camera size per zoom level.
             *camera = Camera::standard_2d(size.width as f32 / zoom, size.height as f32 / zoom);
+
+            // Update the camera position.
+            if camera_state.pan.x != 0. || camera_state.pan.y != 0. {
+                let mut t = transform.clone();
+                let factor = f32::powf(2., 1. / zoom);
+                t.append_translation_xyz(
+                    camera_state.pan.x * factor,
+                    camera_state.pan.y * factor,
+                    0.,
+                );
+                camera_state.behaviour = CameraBehaviour::Static(t);
+            }
 
             match &camera_state.behaviour {
                 CameraBehaviour::Static(t) => *transform = t.clone(),
