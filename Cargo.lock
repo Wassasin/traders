@@ -3223,6 +3223,7 @@ dependencies = [
  "amethyst",
  "derive_more",
  "itertools",
+ "log",
  "nalgebra 0.21.1",
  "nalgebra-glm",
  "rand 0.7.3",

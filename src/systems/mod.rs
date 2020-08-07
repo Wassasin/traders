@@ -7,6 +7,7 @@ use amethyst::{
         prelude::{ReadExpect, ReadStorage, System, WriteStorage},
     },
     renderer::Camera,
+    window::Window,
 };
 use std::ops::{Deref, DerefMut};
 
@@ -83,15 +84,21 @@ pub struct CameraControl;
 
 impl<'a> System<'a> for CameraControl {
     type SystemData = (
-        ReadExpect<'a, CameraBehaviour>,
-        ReadStorage<'a, Camera>,
+        ReadExpect<'a, CameraState>,
+        ReadExpect<'a, Window>,
         ReadStorage<'a, Position>,
+        WriteStorage<'a, Camera>,
         WriteStorage<'a, Transform>,
     );
 
-    fn run(&mut self, (behaviour, camera, pos, mut transform): Self::SystemData) {
-        for (_camera, transform) in (&camera, &mut transform).join() {
-            match behaviour.deref() {
+    fn run(&mut self, (camera_state, window, pos, mut camera, mut transform): Self::SystemData) {
+        let size = window.deref().get_inner_size().unwrap();
+        let zoom = camera_state.zoom;
+
+        for (camera, transform) in (&mut camera, &mut transform).join() {
+            *camera = Camera::standard_2d(size.width as f32 / zoom, size.height as f32 / zoom);
+
+            match &camera_state.behaviour {
                 CameraBehaviour::Static(t) => *transform = t.clone(),
                 CameraBehaviour::Follow(target) => {
                     if let Some(pos) = pos.get(*target) {

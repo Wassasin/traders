@@ -1,11 +1,15 @@
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
     core::transform::Transform,
+    input::{is_close_requested, is_key_down, InputEvent, ScrollDirection},
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteSheet, SpriteSheetFormat, Texture},
+    winit::{MouseButton, VirtualKeyCode},
 };
+use log::info;
 
 use crate::entities::*;
+use crate::resources::*;
 
 pub const ARENA_HEIGHT: f32 = 1000.0;
 pub const ARENA_WIDTH: f32 = 1000.0;
@@ -17,7 +21,7 @@ fn initialise_camera(world: &mut World) {
 
     world
         .create_entity()
-        .with(Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT))
+        .with(Camera::standard_2d(1024., 768.))
         .with(transform)
         .build();
 }
@@ -77,7 +81,58 @@ impl SimpleState for Game {
             ShipBehaviour::Idle,
         );
 
-        let camera_behaviour = crate::resources::CameraBehaviour::Follow(t1);
-        world.insert(camera_behaviour);
+        let camera_state = CameraState {
+            zoom: 1.0,
+            behaviour: CameraBehaviour::Follow(t1),
+        };
+
+        world.insert(camera_state);
+    }
+
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
+        let StateData { world, .. } = data;
+
+        match &event {
+            StateEvent::Window(event) => {
+                if is_close_requested(&event) || is_key_down(&event, VirtualKeyCode::Escape) {
+                    Trans::Quit
+                } else {
+                    Trans::None
+                }
+            }
+            StateEvent::Ui(ui_event) => {
+                info!(
+                    "[HANDLE_EVENT] You just interacted with a ui element: {:?}",
+                    ui_event
+                );
+                Trans::None
+            }
+            StateEvent::Input(input) => {
+                use InputEvent::*;
+                match input {
+                    MouseWheelMoved(dir) => {
+                        let dir = match *dir {
+                            ScrollDirection::ScrollUp => -0.1,
+                            ScrollDirection::ScrollDown => 0.1,
+                            _ => 0.0,
+                        };
+                        let mut camera_state = world.fetch_mut::<CameraState>();
+                        camera_state.zoom = f32::min(f32::max(0.1, camera_state.zoom + dir), 2.0);
+                    }
+                    MouseButtonPressed(MouseButton::Left) => {
+                        info!("Input Event detected: {:?}.", input);
+                    }
+                    MouseMoved { .. } | CursorMoved { .. } => (),
+                    _ => {
+                        info!("Input Event detected: {:?}.", input);
+                    }
+                }
+                Trans::None
+            }
+        }
     }
 }
