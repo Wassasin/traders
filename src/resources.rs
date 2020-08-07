@@ -1,15 +1,15 @@
 use crate::entities::Translation2;
-use amethyst::{core::transform::Transform, ecs::Entity};
+use amethyst::ecs::Entity;
 
 #[derive(Debug)]
 pub enum CameraBehaviour {
-    Static(Transform),
+    Static,
+    Pan(Translation2),
     Follow(Entity),
 }
 
 #[derive(Debug)]
 pub struct CameraState {
     pub zoom: f32,
-    pub pan: Translation2,
     pub behaviour: CameraBehaviour,
 }

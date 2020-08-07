@@ -14,6 +14,8 @@ use crate::resources::*;
 pub const ARENA_HEIGHT: f32 = 1000.0;
 pub const ARENA_WIDTH: f32 = 1000.0;
 
+const DELTA: f32 = 0.00001;
+
 fn initialise_camera(world: &mut World) {
     // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
     let mut transform = Transform::default();
@@ -83,7 +85,6 @@ impl SimpleState for Game {
 
         let camera_state = CameraState {
             zoom: 1.0,
-            pan: Translation2::new(0., 0.),
             behaviour: CameraBehaviour::Follow(t1),
         };
 
@@ -135,23 +136,42 @@ impl SimpleState for Game {
                     | MouseButtonReleased(_) => (),
                     KeyPressed { key_code, .. } => {
                         let mut camera_state = world.fetch_mut::<CameraState>();
+                        let mut t = match camera_state.behaviour {
+                            CameraBehaviour::Pan(t) => t,
+                            _ => Translation2::new(0., 0.),
+                        };
 
                         match key_code {
-                            VirtualKeyCode::W => camera_state.pan.y = 1.,
-                            VirtualKeyCode::A => camera_state.pan.x = -1.,
-                            VirtualKeyCode::S => camera_state.pan.y = -1.,
-                            VirtualKeyCode::D => camera_state.pan.x = 1.,
+                            VirtualKeyCode::W => t.y = 1.,
+                            VirtualKeyCode::A => t.x = -1.,
+                            VirtualKeyCode::S => t.y = -1.,
+                            VirtualKeyCode::D => t.x = 1.,
                             _ => (),
+                        }
+
+                        if nalgebra_glm::length(&t.vector) > DELTA {
+                            camera_state.behaviour = CameraBehaviour::Pan(t);
                         }
                     }
                     KeyReleased { key_code, .. } => {
                         let mut camera_state = world.fetch_mut::<CameraState>();
 
-                        match key_code {
-                            VirtualKeyCode::W => camera_state.pan.y = 0.,
-                            VirtualKeyCode::A => camera_state.pan.x = 0.,
-                            VirtualKeyCode::S => camera_state.pan.y = 0.,
-                            VirtualKeyCode::D => camera_state.pan.x = 0.,
+                        match camera_state.behaviour {
+                            CameraBehaviour::Pan(mut t) => {
+                                match key_code {
+                                    VirtualKeyCode::W => t.y = 0.,
+                                    VirtualKeyCode::A => t.x = 0.,
+                                    VirtualKeyCode::S => t.y = 0.,
+                                    VirtualKeyCode::D => t.x = 0.,
+                                    _ => (),
+                                }
+
+                                if nalgebra_glm::length(&t.vector) > DELTA {
+                                    camera_state.behaviour = CameraBehaviour::Pan(t);
+                                } else {
+                                    camera_state.behaviour = CameraBehaviour::Static;
+                                }
+                            }
                             _ => (),
                         }
                     }

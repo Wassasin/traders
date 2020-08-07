@@ -91,10 +91,7 @@ impl<'a> System<'a> for CameraControl {
         WriteStorage<'a, Transform>,
     );
 
-    fn run(
-        &mut self,
-        (mut camera_state, window, pos, mut camera, mut transform): Self::SystemData,
-    ) {
+    fn run(&mut self, (camera_state, window, pos, mut camera, mut transform): Self::SystemData) {
         let size = window.deref().get_inner_size().unwrap();
         let zoom = camera_state.zoom;
 
@@ -102,24 +99,20 @@ impl<'a> System<'a> for CameraControl {
             // Update the camera size per zoom level.
             *camera = Camera::standard_2d(size.width as f32 / zoom, size.height as f32 / zoom);
 
-            // Update the camera position.
-            if camera_state.pan.x != 0. || camera_state.pan.y != 0. {
-                let mut t = transform.clone();
-                let factor = f32::powf(2., 1. / zoom);
-                t.append_translation_xyz(
-                    camera_state.pan.x * factor,
-                    camera_state.pan.y * factor,
-                    0.,
-                );
-                camera_state.behaviour = CameraBehaviour::Static(t);
-            }
-
             match &camera_state.behaviour {
-                CameraBehaviour::Static(t) => *transform = t.clone(),
+                CameraBehaviour::Static => (),
                 CameraBehaviour::Follow(target) => {
                     if let Some(pos) = pos.get(*target) {
                         transform.set_translation_xyz(pos.x, pos.y, 1.0);
                     }
+                }
+                CameraBehaviour::Pan(translation) => {
+                    let factor = f32::powf(2., 1. / zoom);
+                    transform.append_translation_xyz(
+                        translation.x * factor,
+                        translation.y * factor,
+                        0.,
+                    );
                 }
             }
         }

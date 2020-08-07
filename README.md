@@ -8,7 +8,7 @@ A spaceship trading simulator based on the Amethyst Rust game engine. Purely as 
 ### Rendering / UI
 - [x] Render ships and stations
 - [ ] Show debug information like current cargo, speed, heading, etc.
-- [ ] Camera panning
+- [x] Camera panning
 - [x] Camera zooming
 - [x] Follow an entity with camera
 
