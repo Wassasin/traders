@@ -1,13 +1,14 @@
 use amethyst::{
     assets::Handle,
-    core::transform::Transform,
+    core::{math, transform::Transform},
     ecs::{Builder, Component, DenseVecStorage, Entity, NullStorage, VecStorage, World, WorldExt},
     renderer::{SpriteRender, SpriteSheet},
+    ui::{Anchor, FontAsset, UiText, UiTransform},
 };
 use derive_more::{Add, Deref, DerefMut, Mul, Sub};
 
-pub type Point2 = nalgebra::geometry::Point2<f32>;
-pub type Translation2 = nalgebra::geometry::Translation2<f32>;
+pub type Point2 = math::geometry::Point2<f32>;
+pub type Translation2 = math::geometry::Translation2<f32>;
 
 // Note: arithmatics directly on positions do not make sense. Hence first deref.
 #[derive(Deref, DerefMut, Clone, Copy, Debug)]
@@ -80,6 +81,19 @@ impl Component for Trader {
     type Storage = NullStorage<Self>;
 }
 
+pub struct Parent(pub Entity);
+
+impl Component for Parent {
+    type Storage = VecStorage<Self>;
+}
+
+#[derive(Default)]
+pub struct UiRelative;
+
+impl Component for UiRelative {
+    type Storage = NullStorage<Self>;
+}
+
 pub fn create_station(world: &mut World, pos: Position) -> Entity {
     let sprite_sheet = (*world.fetch::<Handle<SpriteSheet>>()).clone();
     let spriterender = SpriteRender {
@@ -103,7 +117,9 @@ pub fn create_trader(world: &mut World, pos: Position, behaviour: ShipBehaviour)
         sprite_sheet,
         sprite_number: 0,
     };
-    world
+    let font_handle = (*world.fetch::<Handle<FontAsset>>()).clone();
+
+    let res = world
         .create_entity()
         .with(Trader)
         .with(pos)
@@ -111,5 +127,29 @@ pub fn create_trader(world: &mut World, pos: Position, behaviour: ShipBehaviour)
         .with(spriterender)
         .with(Transform::default())
         .with(behaviour)
-        .build()
+        .build();
+
+    world
+        .create_entity()
+        .with(Parent(res))
+        .with(UiRelative)
+        .with(UiTransform::new(
+            format!("trader-{}-{}", res.id(), res.gen().id()),
+            Anchor::BottomLeft,
+            Anchor::Middle,
+            0.0,
+            0.0,
+            0.0,
+            100.,
+            10.,
+        ))
+        .with(UiText::new(
+            font_handle,
+            format!("trader-{}-{}", res.id(), res.gen().id()),
+            [1., 1., 1., 1.],
+            10.,
+        ))
+        .build();
+
+    res
 }

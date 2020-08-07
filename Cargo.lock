@@ -188,7 +188,7 @@ dependencies = [
  "fnv",
  "getset",
  "log",
- "nalgebra 0.19.0",
+ "nalgebra",
  "num-traits 0.2.12",
  "rayon",
  "serde",
@@ -1668,33 +1668,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "nalgebra"
-version = "0.21.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6b6147c3d50b4f3cdabfe2ecc94a0191fd3d6ad58aefd9664cf396285883486"
-dependencies = [
- "approx 0.3.2",
- "generic-array",
- "matrixmultiply",
- "num-complex",
- "num-rational",
- "num-traits 0.2.12",
- "rand 0.7.3",
- "rand_distr",
- "simba",
- "typenum",
-]
-
-[[package]]
 name = "nalgebra-glm"
-version = "0.7.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0689d473f0cbf5d763219dc9faf5d3c3136d20583f533317cc9463f85400ca1"
+checksum = "d68ae659ead26738d2c2318ecf2d519c525c4e99fe275b54dbccb051dec00aa0"
 dependencies = [
+ "alga",
  "approx 0.3.2",
- "nalgebra 0.21.1",
+ "nalgebra",
  "num-traits 0.2.12",
- "simba",
 ]
 
 [[package]]
@@ -2946,18 +2928,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5752e017e03af9d735b4b069f53b7a7fd90fefafa04d8bd0c25581b0bff437f"
 
 [[package]]
-name = "simba"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb931b1367faadea6b1ab1c306a860ec17aaa5fa39f367d0c744e69d971a1fb2"
-dependencies = [
- "approx 0.3.2",
- "num-complex",
- "num-traits 0.2.12",
- "paste",
-]
-
-[[package]]
 name = "siphasher"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3224,7 +3194,6 @@ dependencies = [
  "derive_more",
  "itertools",
  "log",
- "nalgebra 0.21.1",
  "nalgebra-glm",
  "rand 0.7.3",
 ]

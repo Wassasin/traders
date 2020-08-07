@@ -4,6 +4,7 @@ use amethyst::{
     input::{is_close_requested, is_key_down, InputEvent, ScrollDirection},
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteSheet, SpriteSheetFormat, Texture},
+    ui::{FontAsset, TtfFormat},
     winit::{MouseButton, VirtualKeyCode},
 };
 use log::info;
@@ -41,13 +42,20 @@ fn load_sprite_sheet(world: &mut World) -> Handle<SpriteSheet> {
     };
 
     let loader = world.read_resource::<Loader>();
-    let sprite_sheet_store = world.read_resource::<AssetStorage<SpriteSheet>>();
+    let store = world.read_resource::<AssetStorage<SpriteSheet>>();
     loader.load(
         "texture/ships.ron",
         SpriteSheetFormat(texture_handle),
         (),
-        &sprite_sheet_store,
+        &store,
     )
+}
+
+fn load_font(world: &mut World) -> Handle<FontAsset> {
+    let loader = world.read_resource::<Loader>();
+    let store = world.read_resource::<AssetStorage<FontAsset>>();
+
+    loader.load("fonts/square.ttf", TtfFormat, (), &store)
 }
 
 pub struct Game;
@@ -56,8 +64,10 @@ impl SimpleState for Game {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
 
-        let sprite_sheet_handle = load_sprite_sheet(world);
-        world.insert(sprite_sheet_handle);
+        let spritesheet = load_sprite_sheet(world);
+        world.insert(spritesheet);
+        let font = load_font(world);
+        world.insert(font);
 
         initialise_camera(world);
 
@@ -66,6 +76,8 @@ impl SimpleState for Game {
         world.register::<Trader>();
         world.register::<Station>();
         world.register::<ShipBehaviour>();
+        world.register::<Parent>();
+        world.register::<UiRelative>();
 
         create_station(world, Position::new(Point2::new(800., 700.)));
         create_station(world, Position::new(Point2::new(300., 100.)));

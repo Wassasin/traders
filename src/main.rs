@@ -41,6 +41,11 @@ fn main() -> amethyst::Result<()> {
             &["rotation"],
         )
         .with(systems::CameraControl, "camera_control", &["movement"])
+        .with(
+            systems::UiRelativePositioning,
+            "ui_relative_positioning",
+            &["movement"],
+        )
         .with_bundle(TransformBundle::new())?
         .with_bundle(InputBundle::<StringBindings>::new())?
         .with_bundle(UiBundle::<StringBindings>::new())?

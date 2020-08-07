@@ -1,12 +1,13 @@
 pub mod behaviour;
 
 use amethyst::{
-    core::transform::Transform,
+    core::{math, transform::Transform},
     ecs::{
         join::Join,
         prelude::{ReadExpect, ReadStorage, System, WriteExpect, WriteStorage},
     },
     renderer::Camera,
+    ui::UiTransform,
     window::Window,
 };
 use std::ops::{Deref, DerefMut};
@@ -113,6 +114,46 @@ impl<'a> System<'a> for CameraControl {
                         translation.y * factor,
                         0.,
                     );
+                }
+            }
+        }
+    }
+}
+
+pub struct UiRelativePositioning;
+
+impl<'a> System<'a> for UiRelativePositioning {
+    type SystemData = (
+        ReadExpect<'a, Window>,
+        ReadStorage<'a, Camera>,
+        ReadStorage<'a, Parent>,
+        ReadStorage<'a, Transform>,
+        ReadStorage<'a, UiRelative>,
+        WriteStorage<'a, UiTransform>,
+    );
+
+    fn run(
+        &mut self,
+        (window, camera, parent, transform, ui_relative, mut ui_transform): Self::SystemData,
+    ) {
+        let size = window.deref().get_inner_size().unwrap();
+        let size = math::Vector2::new(size.width as f32, size.height as f32);
+
+        for (camera, camera_transform) in (&camera, &transform).join() {
+            let projection = camera.projection();
+            for (parent, _ui_relative, ui_transform) in
+                (&parent, &ui_relative, &mut ui_transform).join()
+            {
+                let Parent(parent) = parent;
+                if let Some(parent_transform) = transform.get(*parent) {
+                    let coords = projection.world_to_screen(
+                        math::Point::from(*parent_transform.translation()),
+                        size,
+                        camera_transform,
+                    );
+                    ui_transform.local_x = coords.x;
+                    // TODO fix this inversion.
+                    ui_transform.local_y = size.y - coords.y;
                 }
             }
         }
