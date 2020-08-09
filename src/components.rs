@@ -116,27 +116,77 @@ impl Component for UiSelectable {
     type Storage = NullStorage<Self>;
 }
 
-pub fn create_station(world: &mut World, pos: Position) -> Entity {
-    let sprite_sheet = (*world.fetch::<Handle<SpriteSheet>>()).clone();
-    let spriterender = SpriteRender {
-        sprite_sheet,
-        sprite_number: 1,
-    };
+pub fn create_label(world: &mut World, target: Entity, name: &str) -> Entity {
+    let font_handle = (*world.fetch::<Handle<FontAsset>>()).clone();
+
+    let label = format!("{}-{}-{}", name, target.gen().id(), target.id());
+    let ui_hitbox = world
+        .create_entity()
+        .with(UiSelectable)
+        .with(UiRelative(target))
+        .with(UiTransform::new(
+            label.clone(),
+            Anchor::BottomLeft,
+            Anchor::Middle,
+            0.0,
+            0.0,
+            0.0,
+            0.,
+            0.,
+        ))
+        .build();
+
+    let mut ui_text = UiText::new(font_handle, label, [1., 1., 1., 1.], 10.);
+    ui_text.align = Anchor::BottomLeft;
+
     world
+        .create_entity()
+        .with(Parent::new(ui_hitbox))
+        .with(UiTransform::new(
+            "label".to_owned(),
+            Anchor::TopRight,
+            Anchor::TopLeft,
+            0.,
+            0.,
+            0.,
+            100.,
+            10.,
+        ))
+        .with(ui_text)
+        .build();
+
+    ui_hitbox
+}
+
+pub fn create_station(world: &mut World, pos: Position) -> Entity {
+    let sprite_number = 1;
+    let sprite_sheet = (*world.fetch::<Handle<SpriteSheet>>()).clone();
+
+    let (width, height) = (51., 58.);
+    let hitbox = Hitbox(Translation2::new(width, height));
+
+    let res = world
         .create_entity()
         .with(Station)
         .with(pos)
-        .with(spriterender)
+        .with(SpriteRender {
+            sprite_sheet,
+            sprite_number,
+        })
+        .with(hitbox)
         .with(Transform::default())
         .with(Angle(f32::default()))
         .with(AngularMomentum(0.001))
-        .build()
+        .build();
+
+    create_label(world, res, "station");
+
+    res
 }
 
 pub fn create_trader(world: &mut World, pos: Position, behaviour: ShipBehaviour) -> Entity {
     let sprite_number = 0;
     let sprite_sheet = (*world.fetch::<Handle<SpriteSheet>>()).clone();
-    let font_handle = (*world.fetch::<Handle<FontAsset>>()).clone();
 
     let (width, height) = (39., 57.);
 
@@ -156,45 +206,7 @@ pub fn create_trader(world: &mut World, pos: Position, behaviour: ShipBehaviour)
         .with(behaviour)
         .build();
 
-    let ui_hitbox = world
-        .create_entity()
-        .with(UiSelectable)
-        .with(UiRelative(res))
-        .with(UiTransform::new(
-            format!("trader-{}-{}", res.id(), res.gen().id()),
-            Anchor::BottomLeft,
-            Anchor::Middle,
-            0.0,
-            0.0,
-            0.0,
-            width,
-            height,
-        ))
-        .build();
-
-    let mut ui_text = UiText::new(
-        font_handle,
-        format!("trader-{}-{}", res.id(), res.gen().id()),
-        [1., 1., 1., 1.],
-        10.,
-    );
-    ui_text.align = Anchor::BottomLeft;
-
-    world
-        .create_entity()
-        .with(Parent::new(ui_hitbox))
-        .with(UiTransform::new(
-            "label".to_owned(),
-            Anchor::TopRight,
-            Anchor::TopLeft,
-            0.,
-            0.,
-            0.,
-            100.,
-            10.,
-        ))
-        .with(ui_text)
-        .build();
+    create_label(world, res, "trader");
 
     res
 }
