@@ -43,6 +43,25 @@ impl Velocity {
     }
 }
 
+#[derive(Deref, DerefMut, Clone, Copy, Debug)]
+pub struct Hitbox(Translation2);
+
+impl Component for Hitbox {
+    type Storage = VecStorage<Self>;
+}
+
+impl Default for Hitbox {
+    fn default() -> Self {
+        Self(Translation2::new(0., 0.))
+    }
+}
+
+impl Hitbox {
+    pub fn new(vec: Translation2) -> Self {
+        Self(vec)
+    }
+}
+
 #[derive(Deref, DerefMut, Clone, Copy, Debug, Default, Sub, Mul, Add)]
 pub struct Angle(f32);
 
@@ -81,16 +100,19 @@ impl Component for Trader {
     type Storage = NullStorage<Self>;
 }
 
-pub struct Parent(pub Entity);
+pub type Parent = amethyst::core::transform::Parent;
+pub type ParentHierarchy = amethyst::core::transform::ParentHierarchy;
 
-impl Component for Parent {
+pub struct UiRelative(pub Entity);
+
+impl Component for UiRelative {
     type Storage = VecStorage<Self>;
 }
 
 #[derive(Default)]
-pub struct UiRelative;
+pub struct UiSelectable;
 
-impl Component for UiRelative {
+impl Component for UiSelectable {
     type Storage = NullStorage<Self>;
 }
 
@@ -112,27 +134,32 @@ pub fn create_station(world: &mut World, pos: Position) -> Entity {
 }
 
 pub fn create_trader(world: &mut World, pos: Position, behaviour: ShipBehaviour) -> Entity {
+    let sprite_number = 0;
     let sprite_sheet = (*world.fetch::<Handle<SpriteSheet>>()).clone();
-    let spriterender = SpriteRender {
-        sprite_sheet,
-        sprite_number: 0,
-    };
     let font_handle = (*world.fetch::<Handle<FontAsset>>()).clone();
+
+    let (width, height) = (39., 57.);
+
+    let hitbox = Hitbox(Translation2::new(width, height));
 
     let res = world
         .create_entity()
         .with(Trader)
         .with(pos)
         .with(Velocity::default())
-        .with(spriterender)
+        .with(SpriteRender {
+            sprite_sheet,
+            sprite_number,
+        })
+        .with(hitbox)
         .with(Transform::default())
         .with(behaviour)
         .build();
 
-    world
+    let ui_hitbox = world
         .create_entity()
-        .with(Parent(res))
-        .with(UiRelative)
+        .with(UiSelectable)
+        .with(UiRelative(res))
         .with(UiTransform::new(
             format!("trader-{}-{}", res.id(), res.gen().id()),
             Anchor::BottomLeft,
@@ -140,15 +167,33 @@ pub fn create_trader(world: &mut World, pos: Position, behaviour: ShipBehaviour)
             0.0,
             0.0,
             0.0,
+            width,
+            height,
+        ))
+        .build();
+
+    let mut ui_text = UiText::new(
+        font_handle,
+        format!("trader-{}-{}", res.id(), res.gen().id()),
+        [1., 1., 1., 1.],
+        10.,
+    );
+    ui_text.align = Anchor::BottomLeft;
+
+    world
+        .create_entity()
+        .with(Parent::new(ui_hitbox))
+        .with(UiTransform::new(
+            "label".to_owned(),
+            Anchor::TopRight,
+            Anchor::TopLeft,
+            0.,
+            0.,
+            0.,
             100.,
             10.,
         ))
-        .with(UiText::new(
-            font_handle,
-            format!("trader-{}-{}", res.id(), res.gen().id()),
-            [1., 1., 1., 1.],
-            10.,
-        ))
+        .with(ui_text)
         .build();
 
     res

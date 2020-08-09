@@ -1,4 +1,4 @@
-use crate::entities::*;
+use crate::components::*;
 use amethyst::ecs::{
     join::Join,
     prelude::{ReadStorage, System, WriteStorage},

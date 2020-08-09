@@ -8,11 +8,11 @@ use amethyst::{
     },
     renderer::Camera,
     ui::UiTransform,
-    window::Window,
+    window::ScreenDimensions,
 };
 use std::ops::{Deref, DerefMut};
 
-use crate::entities::*;
+use crate::components::*;
 use crate::resources::*;
 
 pub struct Movement;
@@ -86,19 +86,18 @@ pub struct CameraControl;
 impl<'a> System<'a> for CameraControl {
     type SystemData = (
         WriteExpect<'a, CameraState>,
-        ReadExpect<'a, Window>,
+        ReadExpect<'a, ScreenDimensions>,
         ReadStorage<'a, Position>,
         WriteStorage<'a, Camera>,
         WriteStorage<'a, Transform>,
     );
 
-    fn run(&mut self, (camera_state, window, pos, mut camera, mut transform): Self::SystemData) {
-        let size = window.deref().get_inner_size().unwrap();
+    fn run(&mut self, (camera_state, size, pos, mut camera, mut transform): Self::SystemData) {
         let zoom = camera_state.zoom;
 
         for (camera, transform) in (&mut camera, &mut transform).join() {
             // Update the camera size per zoom level.
-            *camera = Camera::standard_2d(size.width as f32 / zoom, size.height as f32 / zoom);
+            *camera = Camera::standard_2d(size.width() / zoom, size.height() / zoom);
 
             match &camera_state.behaviour {
                 CameraBehaviour::Static => (),
@@ -124,36 +123,52 @@ pub struct UiRelativePositioning;
 
 impl<'a> System<'a> for UiRelativePositioning {
     type SystemData = (
-        ReadExpect<'a, Window>,
+        ReadExpect<'a, ScreenDimensions>,
         ReadStorage<'a, Camera>,
-        ReadStorage<'a, Parent>,
         ReadStorage<'a, Transform>,
+        ReadStorage<'a, Hitbox>,
         ReadStorage<'a, UiRelative>,
         WriteStorage<'a, UiTransform>,
     );
 
     fn run(
         &mut self,
-        (window, camera, parent, transform, ui_relative, mut ui_transform): Self::SystemData,
+        (size, camera, transform, hitbox, ui_relative, mut ui_transform): Self::SystemData,
     ) {
-        let size = window.deref().get_inner_size().unwrap();
-        let size = math::Vector2::new(size.width as f32, size.height as f32);
+        let size = size.diagonal();
 
         for (camera, camera_transform) in (&camera, &transform).join() {
             let projection = camera.projection();
-            for (parent, _ui_relative, ui_transform) in
-                (&parent, &ui_relative, &mut ui_transform).join()
-            {
-                let Parent(parent) = parent;
+            for (ui_relative, ui_transform) in (&ui_relative, &mut ui_transform).join() {
+                let UiRelative(parent) = ui_relative;
                 if let Some(parent_transform) = transform.get(*parent) {
-                    let coords = projection.world_to_screen(
+                    let middle_world = (*parent_transform).clone();
+                    let middle_screen = projection.world_to_screen(
                         math::Point::from(*parent_transform.translation()),
                         size,
                         camera_transform,
                     );
-                    ui_transform.local_x = coords.x;
+                    ui_transform.local_x = middle_screen.x;
                     // TODO fix this inversion.
-                    ui_transform.local_y = size.y - coords.y;
+                    ui_transform.local_y = size.y - middle_screen.y;
+
+                    if let Some(hitbox) = hitbox.get(*parent) {
+                        let topright_world = middle_world
+                            .clone()
+                            .append_translation_xyz(hitbox.x / 2., hitbox.y / 2., 0.)
+                            .clone();
+                        let topright_screen = projection.world_to_screen(
+                            math::Point::from(*topright_world.translation()),
+                            size,
+                            camera_transform,
+                        );
+
+                        let hwidth = topright_screen.x - middle_screen.x;
+                        let hheight = middle_screen.y - topright_screen.y;
+
+                        ui_transform.width = hwidth * 2.;
+                        ui_transform.height = hheight * 2.;
+                    }
                 }
             }
         }

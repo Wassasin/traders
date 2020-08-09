@@ -1,15 +1,16 @@
 use amethyst::{
     assets::{AssetStorage, Handle, Loader},
     core::transform::Transform,
+    ecs::ReadStorage,
     input::{is_close_requested, is_key_down, InputEvent, ScrollDirection},
     prelude::*,
     renderer::{Camera, ImageFormat, SpriteSheet, SpriteSheetFormat, Texture},
-    ui::{FontAsset, TtfFormat},
+    ui::{FontAsset, TtfFormat, UiEvent, UiEventType},
     winit::{MouseButton, VirtualKeyCode},
 };
 use log::info;
 
-use crate::entities::*;
+use crate::components::*;
 use crate::resources::*;
 
 pub const ARENA_HEIGHT: f32 = 1000.0;
@@ -68,6 +69,8 @@ impl SimpleState for Game {
         world.insert(spritesheet);
         let font = load_font(world);
         world.insert(font);
+        world.insert(Selection::default());
+        world.insert(HoverSelectable::default());
 
         initialise_camera(world);
 
@@ -77,7 +80,9 @@ impl SimpleState for Game {
         world.register::<Station>();
         world.register::<ShipBehaviour>();
         world.register::<Parent>();
+        world.register::<Hitbox>();
         world.register::<UiRelative>();
+        world.register::<UiSelectable>();
 
         create_station(world, Position::new(Point2::new(800., 700.)));
         create_station(world, Position::new(Point2::new(300., 100.)));
@@ -118,11 +123,31 @@ impl SimpleState for Game {
                     Trans::None
                 }
             }
-            StateEvent::Ui(ui_event) => {
-                info!(
-                    "[HANDLE_EVENT] You just interacted with a ui element: {:?}",
-                    ui_event
-                );
+            StateEvent::Ui(UiEvent { event_type, target }) => {
+                let (selectable, relative): (ReadStorage<UiSelectable>, ReadStorage<UiRelative>) =
+                    world.system_data();
+                let mut hover_selectable = world.fetch_mut::<HoverSelectable>();
+
+                match event_type {
+                    UiEventType::HoverStart => {
+                        if selectable.get(*target).is_some() {
+                            if let Some(UiRelative(parent)) = relative.get(*target) {
+                                hover_selectable.0.insert(*parent);
+                            }
+                        }
+                    }
+                    UiEventType::HoverStop => {
+                        if selectable.get(*target).is_some() {
+                            if let Some(UiRelative(parent)) = relative.get(*target) {
+                                hover_selectable.0.remove(parent);
+                            }
+                        }
+                    }
+                    _ => info!(
+                        "[HANDLE_EVENT] You just interacted with a ui element: {:?}",
+                        event_type
+                    ),
+                }
                 Trans::None
             }
             StateEvent::Input(input) => {
@@ -138,7 +163,16 @@ impl SimpleState for Game {
                         camera_state.zoom = f32::min(f32::max(0.1, camera_state.zoom + dir), 2.0);
                     }
                     MouseButtonPressed(MouseButton::Left) => {
-                        info!("Press detected: {:?}.", input);
+                        let hover_selectable = world.fetch::<HoverSelectable>();
+                        let mut camera_state = world.fetch_mut::<CameraState>();
+
+                        if hover_selectable.0.len() == 1 {
+                            if let Some(target) = hover_selectable.0.iter().next() {
+                                camera_state.behaviour = CameraBehaviour::Follow(*target);
+                            }
+                        }
+
+                        info!("Press detected: {:?} {:?}.", input, hover_selectable.0);
                     }
                     MouseMoved { .. }
                     | CursorMoved { .. }

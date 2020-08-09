@@ -1,5 +1,6 @@
-use crate::entities::Translation2;
+use crate::components::Translation2;
 use amethyst::ecs::Entity;
+use std::collections::HashSet;
 
 #[derive(Debug)]
 pub enum CameraBehaviour {
@@ -13,3 +14,9 @@ pub struct CameraState {
     pub zoom: f32,
     pub behaviour: CameraBehaviour,
 }
+
+#[derive(Debug, Default)]
+pub struct Selection(pub Option<Entity>);
+
+#[derive(Debug, Default)]
+pub struct HoverSelectable(pub HashSet<Entity>);
