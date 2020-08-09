@@ -116,16 +116,16 @@ impl Component for UiSelectable {
     type Storage = NullStorage<Self>;
 }
 
-pub fn create_label(world: &mut World, target: Entity, name: &str) -> Entity {
-    let font_handle = (*world.fetch::<Handle<FontAsset>>()).clone();
+fn compute_name(target: &Entity, name: &str) -> String {
+    format!("{}-{}-{}", name, target.gen().id(), target.id())
+}
 
-    let label = format!("{}-{}-{}", name, target.gen().id(), target.id());
-    let ui_hitbox = world
+fn create_ui_anchor(world: &mut World, target: &Entity, name: &str, selectable: bool) -> Entity {
+    let mut res = world
         .create_entity()
-        .with(UiSelectable)
-        .with(UiRelative(target))
+        .with(UiRelative(*target))
         .with(UiTransform::new(
-            label.clone(),
+            compute_name(target, name),
             Anchor::BottomLeft,
             Anchor::Middle,
             0.0,
@@ -133,15 +133,24 @@ pub fn create_label(world: &mut World, target: Entity, name: &str) -> Entity {
             0.0,
             0.,
             0.,
-        ))
-        .build();
+        ));
 
-    let mut ui_text = UiText::new(font_handle, label, [1., 1., 1., 1.], 10.);
+    if selectable {
+        res = res.with(UiSelectable);
+    }
+
+    res.build()
+}
+
+pub fn create_label(world: &mut World, anchor: &Entity, name: String) {
+    let font_handle = (*world.fetch::<Handle<FontAsset>>()).clone();
+
+    let mut ui_text = UiText::new(font_handle, name, [1., 1., 1., 1.], 10.);
     ui_text.align = Anchor::BottomLeft;
 
     world
         .create_entity()
-        .with(Parent::new(ui_hitbox))
+        .with(Parent::new(*anchor))
         .with(UiTransform::new(
             "label".to_owned(),
             Anchor::TopRight,
@@ -154,8 +163,6 @@ pub fn create_label(world: &mut World, target: Entity, name: &str) -> Entity {
         ))
         .with(ui_text)
         .build();
-
-    ui_hitbox
 }
 
 pub fn create_station(world: &mut World, pos: Position) -> Entity {
@@ -179,7 +186,8 @@ pub fn create_station(world: &mut World, pos: Position) -> Entity {
         .with(AngularMomentum(0.001))
         .build();
 
-    create_label(world, res, "station");
+    let anchor = create_ui_anchor(world, &res, "station", true);
+    create_label(world, &anchor, compute_name(&res, "station"));
 
     res
 }
@@ -206,7 +214,8 @@ pub fn create_trader(world: &mut World, pos: Position, behaviour: ShipBehaviour)
         .with(behaviour)
         .build();
 
-    create_label(world, res, "trader");
+    let anchor = create_ui_anchor(world, &res, "trader", true);
+    create_label(world, &anchor, compute_name(&res, "trader"));
 
     res
 }

@@ -155,7 +155,11 @@ impl<'a> System<'a> for UiRelativePositioning {
                     if let Some(hitbox) = hitbox.get(*parent) {
                         let topright_world = middle_world
                             .clone()
-                            .append_translation_xyz(hitbox.x / 2., hitbox.y / 2., 0.)
+                            .prepend_translation(math::Vector3::new(
+                                hitbox.x / 2.,
+                                hitbox.y / 2.,
+                                0.,
+                            ))
                             .clone();
                         let topright_screen = projection.world_to_screen(
                             math::Point::from(*topright_world.translation()),
