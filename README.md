@@ -1,7 +1,7 @@
 # Traders
 A spaceship trading simulator based on the Amethyst Rust game engine. Purely as a hobby project.
 
-![Current state of the game](assets/state.png)
+![Current state of the game](assets/state.gif)
 
 ## Roadmap
 
