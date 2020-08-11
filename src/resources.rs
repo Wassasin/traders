@@ -1,4 +1,4 @@
-use crate::components::Translation2;
+use crate::components::{Time, Translation2};
 use amethyst::ecs::Entity;
 use std::collections::HashSet;
 
@@ -20,3 +20,6 @@ pub struct Selection(pub Option<Entity>);
 
 #[derive(Debug, Default)]
 pub struct HoverSelectable(pub HashSet<Entity>);
+
+#[derive(Debug, Default)]
+pub struct CurrentTime(pub Time);

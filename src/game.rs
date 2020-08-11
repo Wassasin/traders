@@ -69,6 +69,7 @@ impl SimpleState for Game {
         world.insert(spritesheet);
         let font = load_font(world);
         world.insert(font);
+        world.insert(CurrentTime::default());
         world.insert(Selection::default());
         world.insert(HoverSelectable::default());
 
@@ -81,6 +82,8 @@ impl SimpleState for Game {
         world.register::<ShipBehaviour>();
         world.register::<Parent>();
         world.register::<Hitbox>();
+        world.register::<Cargo>();
+        world.register::<FabricationModule>();
         world.register::<UiRelative>();
         world.register::<UiSelectable>();
 

@@ -15,6 +15,16 @@ use std::ops::{Deref, DerefMut};
 use crate::components::*;
 use crate::resources::*;
 
+pub struct IncrementTime;
+
+impl<'a> System<'a> for IncrementTime {
+    type SystemData = WriteExpect<'a, CurrentTime>;
+
+    fn run(&mut self, mut time: Self::SystemData) {
+        time.0 += Time(1);
+    }
+}
+
 pub struct Movement;
 
 impl<'a> System<'a> for Movement {

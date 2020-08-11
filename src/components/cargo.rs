@@ -1,18 +1,13 @@
 use amethyst::ecs::{Component, VecStorage};
 use derive_more::{Add, Deref, DerefMut, Sub};
-use std::collections::HashMap;
+use enum_map::{Enum, EnumMap};
+
+use super::*;
 
 #[derive(Default, Deref, DerefMut, Clone, Copy, Debug, Add, Sub, PartialEq, Eq, PartialOrd)]
-pub struct CargoUnits(i64);
+pub struct CargoUnits(pub i32);
 
-#[derive(Default)]
-pub struct CargoCapacity(CargoUnits);
-
-impl Component for CargoCapacity {
-    type Storage = VecStorage<Self>;
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Enum)]
 pub enum CargoType {
     CarbonOre,
     MetalOre,
@@ -33,8 +28,9 @@ pub enum CargoType {
     Hullplating,
 }
 
+#[derive(Debug, Clone)]
 pub struct Cargo {
-    inner: HashMap<CargoType, CargoUnits>,
+    inner: EnumMap<CargoType, CargoUnits>,
     cache_total: CargoUnits,
     capacity: CargoUnits,
 }
@@ -52,17 +48,21 @@ pub enum CargoError {
 impl Cargo {
     pub fn new(capacity: CargoUnits) -> Self {
         Cargo {
-            inner: HashMap::<CargoType, CargoUnits>::default(),
+            inner: EnumMap::<CargoType, CargoUnits>::default(),
             cache_total: CargoUnits(0),
             capacity,
         }
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.cache_total == self.capacity
     }
 
     /// Adapt Cargo to possess more or less of a given CargoType.
     ///
     /// Will yield CargoError when inventory or capacity is not sufficient.
     pub fn change(&mut self, t: CargoType, amount: CargoUnits) -> Result<CargoUnits, CargoError> {
-        let current_amount = self.inner.entry(t).or_insert(CargoUnits::default());
+        let current_amount: &mut CargoUnits = &mut self.inner[t];
 
         let new_amount = *current_amount + amount;
         let new_cache_total = self.cache_total + amount;
@@ -79,4 +79,35 @@ impl Cargo {
         self.cache_total = new_cache_total;
         Ok(new_amount)
     }
+
+    pub fn mass_change_iter(
+        &mut self,
+        other: impl Iterator<Item = (CargoType, CargoUnits)>,
+    ) -> Result<(), CargoError> {
+        let mut copy = self.clone();
+        for (k, v) in other {
+            if v != CargoUnits(0) {
+                copy.change(k, v)?;
+            }
+        }
+        *self = copy;
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct FabricationRecipe {
+    pub duration: Time,
+    pub ingredients: &'static [(CargoType, CargoUnits)],
+    pub products: &'static [(CargoType, CargoUnits)],
+}
+
+#[derive(Clone, Debug)]
+pub struct FabricationModule {
+    pub progress: Option<Time>,
+    pub recipe: &'static FabricationRecipe,
+}
+
+impl Component for FabricationModule {
+    type Storage = VecStorage<Self>;
 }

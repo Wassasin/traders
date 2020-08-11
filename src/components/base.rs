@@ -2,10 +2,28 @@ use amethyst::{
     core::math,
     ecs::{Component, DenseVecStorage, VecStorage},
 };
-use derive_more::{Add, Deref, DerefMut, Mul, Sub};
+use derive_more::{Add, AddAssign, Deref, DerefMut, Mul, Sub, SubAssign};
 
 pub type Point2 = math::geometry::Point2<f32>;
 pub type Translation2 = math::geometry::Translation2<f32>;
+
+// Each time unit is a frame. (1/50th of second)
+#[derive(
+    Deref,
+    DerefMut,
+    Default,
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Add,
+    Sub,
+    AddAssign,
+    SubAssign,
+)]
+pub struct Time(pub u32);
 
 // Note: arithmatics directly on positions do not make sense. Hence first deref.
 #[derive(Deref, DerefMut, Clone, Copy, Debug)]
