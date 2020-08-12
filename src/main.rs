@@ -27,6 +27,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(systems::IncrementTime, "increment_time", &[])
+        .with(systems::cargo::Fabrication, "fabrication", &[])
         .with(systems::behaviour::Idle, "behaviour_idle", &[])
         .with(systems::behaviour::FlyTo, "behaviour_fly_to", &[])
         .with(systems::Movement, "movement", &["behaviour_fly_to"])

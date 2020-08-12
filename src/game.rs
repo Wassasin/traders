@@ -87,9 +87,17 @@ impl SimpleState for Game {
         world.register::<UiRelative>();
         world.register::<UiSelectable>();
 
-        create_station(world, Position::new(Point2::new(800., 700.)));
-        create_station(world, Position::new(Point2::new(300., 100.)));
-        create_station(world, Position::new(Point2::new(200., 600.)));
+        create_station(
+            world,
+            Position::new(Point2::new(800., 700.)),
+            &METAL_ORE_RECIPE,
+        );
+        create_station(
+            world,
+            Position::new(Point2::new(300., 100.)),
+            &METAL_ORE_RECIPE,
+        );
+        create_station(world, Position::new(Point2::new(200., 600.)), &METAL_RECIPE);
 
         create_trader(
             world,

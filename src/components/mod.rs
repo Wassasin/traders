@@ -44,18 +44,11 @@ fn compute_name(target: &Entity, name: &str) -> String {
     format!("{}-{}-{}", name, target.gen().id(), target.id())
 }
 
-static METAL_ORE_RECIPE: FabricationRecipe = FabricationRecipe {
-    duration: Time(50),
-    ingredients: &[],
-    products: &[(CargoType::MetalOre, CargoUnits(1))],
-};
-static METAL_RECIPE: FabricationRecipe = FabricationRecipe {
-    duration: Time(50),
-    ingredients: &[(CargoType::MetalOre, CargoUnits(5))],
-    products: &[(CargoType::Metal, CargoUnits(1))],
-};
-
-pub fn create_station(world: &mut World, pos: Position) -> Entity {
+pub fn create_station(
+    world: &mut World,
+    pos: Position,
+    recipe: &'static FabricationRecipe,
+) -> Entity {
     let sprite_number = 1;
     let sprite_sheet = (*world.fetch::<Handle<SpriteSheet>>()).clone();
 
@@ -76,8 +69,8 @@ pub fn create_station(world: &mut World, pos: Position) -> Entity {
         .with(AngularMomentum::new(0.001))
         .with(Cargo::new(CargoUnits(1000000)))
         .with(FabricationModule {
-            progress: None,
-            recipe: &METAL_ORE_RECIPE,
+            state: FabricationState::Idle,
+            recipe,
         })
         .build();
 

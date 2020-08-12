@@ -1,4 +1,5 @@
 pub mod behaviour;
+pub mod cargo;
 
 use amethyst::{
     core::{math, transform::Transform},

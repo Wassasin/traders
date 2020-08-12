@@ -103,11 +103,32 @@ pub struct FabricationRecipe {
 }
 
 #[derive(Clone, Debug)]
+pub enum FabricationState {
+    /// Fabrication is not running.
+    Idle,
+    /// Fabrication is done, but awaiting delivery (due to OverCapacity)
+    Hanging,
+    /// Fabrication is running, and will be done on the deadline.
+    Running { deadline: Time },
+}
+
+#[derive(Clone, Debug)]
 pub struct FabricationModule {
-    pub progress: Option<Time>,
+    pub state: FabricationState,
     pub recipe: &'static FabricationRecipe,
 }
 
 impl Component for FabricationModule {
     type Storage = VecStorage<Self>;
 }
+
+pub static METAL_ORE_RECIPE: FabricationRecipe = FabricationRecipe {
+    duration: Time(50),
+    ingredients: &[],
+    products: &[(CargoType::MetalOre, CargoUnits(1))],
+};
+pub static METAL_RECIPE: FabricationRecipe = FabricationRecipe {
+    duration: Time(100),
+    ingredients: &[(CargoType::MetalOre, CargoUnits(5))],
+    products: &[(CargoType::Metal, CargoUnits(1))],
+};
